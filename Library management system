@@ -1,0 +1,80 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans, DBSCAN
+from sklearn.metrics import silhouette_score, davies_bouldin_score
+from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+
+# Generate or load a dataset (e.g., synthetic data for demonstration)
+from sklearn.datasets import make_blobs
+
+# Generate synthetic data
+n_samples = 300
+random_state = 42
+X, _ = make_blobs(n_samples=n_samples, centers=4, cluster_std=1.0, random_state=random_state)
+
+# Visualize the dataset
+plt.scatter(X[:, 0], X[:, 1], s=50, cmap='viridis')
+plt.title('Dataset for Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.show()
+
+# K-Means Clustering
+kmeans = KMeans(n_clusters=4, random_state=random_state)
+kmeans_labels = kmeans.fit_predict(X)
+kmeans_silhouette = silhouette_score(X, kmeans_labels)
+kmeans_db_index = davies_bouldin_score(X, kmeans_labels)
+
+print(f"K-Means Silhouette Score: {kmeans_silhouette:.2f}")
+print(f"K-Means Davies-Bouldin Index: {kmeans_db_index:.2f}")
+
+# Visualize K-Means Clustering
+plt.scatter(X[:, 0], X[:, 1], c=kmeans_labels, cmap='viridis', s=50)
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], c='red', marker='x', label='Centroids')
+plt.title('K-Means Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.legend()
+plt.show()
+
+# Hierarchical Clustering
+hierarchical_linkage = linkage(X, method='ward')
+
+# Dendrogram Visualization
+plt.figure(figsize=(10, 7))
+dendrogram(hierarchical_linkage)
+plt.title('Hierarchical Clustering Dendrogram')
+plt.xlabel('Sample Index')
+plt.ylabel('Distance')
+plt.show()
+
+# Assign clusters
+hierarchical_labels = fcluster(hierarchical_linkage, t=4, criterion='maxclust')
+
+# Visualize Hierarchical Clustering
+plt.scatter(X[:, 0], X[:, 1], c=hierarchical_labels, cmap='viridis', s=50)
+plt.title('Hierarchical Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.show()
+
+# DBSCAN Clustering
+dbscan = DBSCAN(eps=0.8, min_samples=5)
+dbscan_labels = dbscan.fit_predict(X)
+
+# Evaluate DBSCAN (filtering noise points, labeled as -1)
+if len(set(dbscan_labels) - {-1}) > 1:
+    dbscan_silhouette = silhouette_score(X[dbscan_labels != -1], dbscan_labels[dbscan_labels != -1])
+    dbscan_db_index = davies_bouldin_score(X[dbscan_labels != -1], dbscan_labels[dbscan_labels != -1])
+    print(f"DBSCAN Silhouette Score: {dbscan_silhouette:.2f}")
+    print(f"DBSCAN Davies-Bouldin Index: {dbscan_db_index:.2f}")
+else:
+    print("DBSCAN did not identify enough clusters for evaluation.")
+
+# Visualize DBSCAN Clustering
+plt.scatter(X[:, 0], X[:, 1], c=dbscan_labels, cmap='viridis', s=50)
+plt.title('DBSCAN Clustering')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.show()
